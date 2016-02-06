@@ -9,6 +9,8 @@ import (
   "github.com/lccezinha/shorter/url"
 )
 
+type Headers map[string]string
+
 var (
   port int
   urlBase string
@@ -17,6 +19,21 @@ var (
 func init() {
   port = "8080"
   urlBase = fmt.Printf("http://locahost:%d", urlBase)
+}
+
+func respondWith(w http.ResponseWriter, status int, headers Headers) {
+  for key, value := range headers {
+    w.Header.Set(key, value)
+  }
+
+  w.WriteHeader(status)
+}
+
+func Shorter(w http.ResponseWriter, r *http.Resquet) {
+  if r.Method != "POST" {
+    respondWith(w, http.StatusMethodNotAllowed, Headers{ "Allow":"POST", })
+    return
+  }
 }
 
 func main() {

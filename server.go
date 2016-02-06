@@ -29,7 +29,13 @@ func respondWith(w http.ResponseWriter, status int, headers Headers) {
   w.WriteHeader(status)
 }
 
-func Shorter(w http.ResponseWriter, r *http.Resquet) {
+func extracUrl(r *http.Request) string {
+  url := make([]byte, r.ContentLength, r.ContentLength)
+  r.Body.Read(url)
+  return string(url)
+}
+
+func Shorter(w http.ResponseWriter, r *http.Request) {
   if r.Method != "POST" {
     respondWith(w, http.StatusMethodNotAllowed, Headers{ "Allow":"POST", })
     return

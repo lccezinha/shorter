@@ -11,6 +11,10 @@ import (
 
 type Headers map[string]string
 
+/*
+Ainda é necessário implementar os exemplos do começo do capítulo (métodos do pacote URL)
+*/
+
 var (
   port int
   urlBase string

@@ -29,6 +29,10 @@ func respondWith(w http.ResponseWriter, status int, headers Headers) {
   w.WriteHeader(status)
 }
 
+func logger(format string, values ...interface{}) {
+  log.Printf(fmt.Sprintf("%s \n", format), values...)
+}
+
 func extractUrl(r *http.Request) string {
   url := make([]byte, r.ContentLength, r.ContentLength)
   r.Body.Read(url)
@@ -68,6 +72,8 @@ func Shorter(w http.ResponseWriter, r *http.Request) {
 
   urlShort := fmt.Sprintf("%s/r/%s", urlBase, url.Id)
   respondWith(w, status, Headers{"Location": urlShort})
+
+  logger("URL: %s foi encurtada para %s. \n", url.UrlOriginal, urlShort)
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {

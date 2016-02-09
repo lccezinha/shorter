@@ -21,7 +21,7 @@ type Repository interface {
 }
 
 type Url struct {
-  Id int
+  Id string
   CreatedAt time.Time
   UrlOriginal string
 }
@@ -46,18 +46,18 @@ func generateId() string {
   }
 
   for {
-    id := newId(); !repo.Persisted(id) {
+    if id := newId(); !repository.Persisted(id) {
       return id
     }
   }
 }
 
 func Find(id string) *Url {
-  return repo.FindById(id)
+  return repository.FindById(id)
 }
 
-func FetchUrl(urlOriginal string) (url *string, isNew bool, err error) {
-  if u = repo.FindByUrl(urlOriginal); u != nil {
+func FetchUrl(urlOriginal string) (u *Url, isNew bool, err error) {
+  if u = repository.FindByUrl(urlOriginal); u != nil {
     return u, false, nil
   }
 
@@ -66,7 +66,7 @@ func FetchUrl(urlOriginal string) (url *string, isNew bool, err error) {
   }
 
   url := Url{generateId(), time.Now(), urlOriginal}
-  repo.Save(url)
+  repository.Save(url)
 
   return &url, true, nil
 }

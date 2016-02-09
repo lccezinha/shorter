@@ -75,6 +75,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+  url.ConfigRepository(url.InitializeRepository())
+
   http.HandleFunc("/api/shorter", Shorter)
   http.HandleFunc("/r/", Redirecter)
   http.HandleFunc("/home", Home)

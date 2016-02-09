@@ -4,7 +4,7 @@ type repositoryMemory struct {
   urls map[string]*Url
 }
 
-func Initialize() *repositoryMemory {
+func InitializeRepository() *repositoryMemory {
   return &repositoryMemory{make(map[string]*Url)}
 }
 

@@ -5,6 +5,7 @@ import (
   "log"
   "net/http"
   "strings"
+  "encoding/json"
 
   "github.com/lccezinha/shorter/url"
 )
@@ -28,6 +29,11 @@ func respondWith(w http.ResponseWriter, status int, headers Headers) {
   }
 
   w.WriteHeader(status)
+}
+
+func respondWithJSON(w http.ResponseWriter, responseData string) {
+  respondWith(w, http.StatusOK, Headers{"Content-type":"application/json"})
+  fmt.Fprintf(w, responseData)
 }
 
 func logger(format string, values ...interface{}) {
@@ -80,9 +86,32 @@ func Shorter(w http.ResponseWriter, r *http.Request) {
   }
 
   urlShort := fmt.Sprintf("%s/r/%s", urlBase, url.Id)
-  respondWith(w, status, Headers{"Location": urlShort})
+  headers := Headers{
+    "Location": urlShort,
+    "Link": fmt.Sprintf("<%s/api/stats/%s>; rel='stats'", urlBase, url.Id),
+  }
+  respondWith(w, status, headers)
 
   logger("URL: %s foi encurtada para %s. \n", url.UrlOriginal, urlShort)
+}
+
+func Stats(w http.ResponseWriter, r *http.Request) {
+  path := strings.Split(r.URL.Path, "/")
+  id := path[len(path) - 1]
+
+  logger("Buscando clicks do ID: %s", id)
+
+  if url := url.Find(id); url != nil {
+    json, err := json.Marshal(url.ShowStats())
+    if err != nil {
+      w.WriteHeader(http.StatusInternalServerError)
+      return
+    }
+
+    respondWithJSON(w, string(json))
+  } else {
+    http.NotFound(w, r)
+  }
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +128,7 @@ func main() {
   http.HandleFunc("/api/shorter", Shorter)
   http.HandleFunc("/r/", Redirecter)
   http.HandleFunc("/home", Home)
+  http.HandleFunc("/api/stats/", Stats)
 
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }

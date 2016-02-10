@@ -40,3 +40,7 @@ func (r *repositoryMemory) Save(url Url) error {
 func (r *repositoryMemory) RegisterClick(id string) {
   r.clicks[id] += 1
 }
+
+func (r *repositoryMemory) ShowClicks(id string) int {
+  return r.clicks[id]
+}

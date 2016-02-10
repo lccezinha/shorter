@@ -18,6 +18,7 @@ type Repository interface {
   FindById(id string) *Url
   FindByUrl(url string) *Url
   Save(url Url) error
+  RegisterClick(id string)
 }
 
 type Url struct {
@@ -54,6 +55,10 @@ func generateId() string {
 
 func Find(id string) *Url {
   return repository.FindById(id)
+}
+
+func RegisterClick(id string) {
+  repository.RegisterClick(id)
 }
 
 func FetchUrl(urlOriginal string) (u *Url, isNew bool, err error) {

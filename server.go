@@ -14,11 +14,12 @@ type Headers map[string]string
 var (
   port int
   urlBase string
+  stats chan string
 )
 
 func init() {
   port = 8080
-  urlBase = fmt.Sprintf("http://locahost:%d", port)
+  urlBase = fmt.Sprintf("http://localhost:%d", port)
 }
 
 func respondWith(w http.ResponseWriter, status int, headers Headers) {
@@ -39,12 +40,20 @@ func extractUrl(r *http.Request) string {
   return string(url)
 }
 
+func registerStats(ids <-chan string) {
+  for id := range ids {
+    url.RegisterClick(id)
+    logger("Click registrado para %s. ", id)
+  }
+}
+
 func Redirecter(w http.ResponseWriter, r *http.Request) {
   path := strings.Split(r.URL.Path, "/")
   id := path[len(path) - 1]
 
   if url := url.Find(id); url != nil {
     http.Redirect(w, r, url.UrlOriginal, http.StatusMovedPermanently)
+    stats <- id
   } else {
     http.NotFound(w, r)
   }
@@ -81,6 +90,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+  stats = make(chan string)
+  defer close(stats)
+  go registerStats(stats)
+
   url.ConfigRepository(url.InitializeRepository())
 
   http.HandleFunc("/api/shorter", Shorter)

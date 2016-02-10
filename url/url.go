@@ -22,9 +22,9 @@ type Repository interface {
 }
 
 type Url struct {
-  Id string
-  CreatedAt time.Time
-  UrlOriginal string
+  Id          string    `json:"id"`
+  CreatedAt   time.Time `json:"created_at"`
+  UrlOriginal string    `json:"url_original"`
 }
 
 func ConfigRepository(r Repository) {

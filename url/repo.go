@@ -2,10 +2,14 @@ package url
 
 type repositoryMemory struct {
   urls map[string]*Url
+  clicks map[string]int
 }
 
 func InitializeRepository() *repositoryMemory {
-  return &repositoryMemory{make(map[string]*Url)}
+  return &repositoryMemory{
+    make(map[string]*Url),
+    make(map[string]int),
+  }
 }
 
 func (r *repositoryMemory) Persisted(id string) bool {
@@ -31,4 +35,8 @@ func (r *repositoryMemory) FindByUrl(url string) *Url {
 func (r *repositoryMemory) Save(url Url) error {
   r.urls[url.Id] = &url
   return nil
+}
+
+func (r *repositoryMemory) RegisterClick(id string) {
+  r.clicks[id] += 1
 }

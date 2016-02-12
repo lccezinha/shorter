@@ -56,16 +56,22 @@ func registerStats(ids <-chan string) {
   }
 }
 
-func (redirecter *Redirecter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func fetchAndExecute(w http.ResponseWriter, r *http.Request, executor func(*url.Url)) {
   path := strings.Split(r.URL.Path, "/")
   id := path[len(path) - 1]
 
   if url := url.Find(id); url != nil {
-    http.Redirect(w, r, url.UrlOriginal, http.StatusMovedPermanently)
-    redirecter.stats <- id
+    executor(url)
   } else {
     http.NotFound(w, r)
   }
+}
+
+func (redirecter *Redirecter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+  fetchAndExecute(w, r, func(url *url.Url) {
+    http.Redirect(w, r, url.UrlOriginal, http.StatusMovedPermanently)
+    redirecter.stats <- url.Id
+  })
 }
 
 func Shorter(w http.ResponseWriter, r *http.Request) {
@@ -99,22 +105,16 @@ func Shorter(w http.ResponseWriter, r *http.Request) {
 }
 
 func Stats(w http.ResponseWriter, r *http.Request) {
-  path := strings.Split(r.URL.Path, "/")
-  id := path[len(path) - 1]
-
-  logger("Buscando clicks do ID: %s", id)
-
-  if url := url.Find(id); url != nil {
+  fetchAndExecute(w, r, func(url *url.Url) {
     json, err := json.Marshal(url.ShowStats())
+
     if err != nil {
       w.WriteHeader(http.StatusInternalServerError)
       return
     }
 
     respondWithJSON(w, string(json))
-  } else {
-    http.NotFound(w, r)
-  }
+  })
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {

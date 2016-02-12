@@ -12,10 +12,13 @@ import (
 
 type Headers map[string]string
 
+type Redirecter struct {
+  stats chan string
+}
+
 var (
   port int
   urlBase string
-  stats chan string
 )
 
 func init() {
@@ -53,13 +56,13 @@ func registerStats(ids <-chan string) {
   }
 }
 
-func Redirecter(w http.ResponseWriter, r *http.Request) {
+func (redirecter *Redirecter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   path := strings.Split(r.URL.Path, "/")
   id := path[len(path) - 1]
 
   if url := url.Find(id); url != nil {
     http.Redirect(w, r, url.UrlOriginal, http.StatusMovedPermanently)
-    stats <- id
+    redirecter.stats <- id
   } else {
     http.NotFound(w, r)
   }
@@ -119,14 +122,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-  stats = make(chan string)
+  stats := make(chan string)
   defer close(stats)
   go registerStats(stats)
 
   url.ConfigRepository(url.InitializeRepository())
 
   http.HandleFunc("/api/shorter", Shorter)
-  http.HandleFunc("/r/", Redirecter)
+  http.Handle("/r/", &Redirecter{stats})
   http.HandleFunc("/home", Home)
   http.HandleFunc("/api/stats/", Stats)
 

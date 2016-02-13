@@ -7,6 +7,7 @@ import (
   "strings"
   "encoding/json"
   "os"
+  "flag"
 
   "github.com/lccezinha/shorter/url"
 )
@@ -18,14 +19,19 @@ type Redirecter struct {
 }
 
 var (
-  port int
+  port *int
+  logOn *bool
   urlBase string
   logFile *os.File
 )
 
 func init() {
-  port = 8080
-  urlBase = fmt.Sprintf("http://localhost:%d", port)
+  port  = flag.Int("p", 8888, "port")
+  logOn = flag.Bool("l", true, "log on/off")
+  flag.Parse()
+
+
+  urlBase = fmt.Sprintf("http://localhost:%d", *port)
   logFile, _ = os.Create("server.log")
 }
 
@@ -43,8 +49,10 @@ func respondWithJSON(w http.ResponseWriter, responseData string) {
 }
 
 func logger(format string, values ...interface{}) {
-  log.Printf(fmt.Sprintf("%s \n", format), values...)
-  logFile.WriteString(fmt.Sprintf(fmt.Sprintf("%s \n", format), values...))
+  if *logOn {
+    log.Printf(fmt.Sprintf("%s \n", format), values...)
+    logFile.WriteString(fmt.Sprintf(fmt.Sprintf("%s \n", format), values...))
+  }
 }
 
 func extractUrl(r *http.Request) string {
@@ -139,6 +147,6 @@ func main() {
   http.HandleFunc("/home", Home)
   http.HandleFunc("/api/stats/", Stats)
 
-  logger("Server iniciado na porta: %d\n", port)
-  log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+  logger("Server iniciado na porta: %d\n", *port)
+  log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
 }

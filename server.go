@@ -6,6 +6,7 @@ import (
   "net/http"
   "strings"
   "encoding/json"
+  "os"
 
   "github.com/lccezinha/shorter/url"
 )
@@ -19,11 +20,13 @@ type Redirecter struct {
 var (
   port int
   urlBase string
+  logFile *os.File
 )
 
 func init() {
   port = 8080
   urlBase = fmt.Sprintf("http://localhost:%d", port)
+  logFile, _ = os.Create("server.log")
 }
 
 func respondWith(w http.ResponseWriter, status int, headers Headers) {
@@ -41,6 +44,7 @@ func respondWithJSON(w http.ResponseWriter, responseData string) {
 
 func logger(format string, values ...interface{}) {
   log.Printf(fmt.Sprintf("%s \n", format), values...)
+  logFile.WriteString(fmt.Sprintf(fmt.Sprintf("%s \n", format), values...))
 }
 
 func extractUrl(r *http.Request) string {
@@ -71,6 +75,7 @@ func (redirecter *Redirecter) ServeHTTP(w http.ResponseWriter, r *http.Request) 
   fetchAndExecute(w, r, func(url *url.Url) {
     http.Redirect(w, r, url.UrlOriginal, http.StatusMovedPermanently)
     redirecter.stats <- url.Id
+    logger("Fazendo redirect da URL %s \n", url.UrlOriginal)
   })
 }
 
@@ -125,6 +130,7 @@ func main() {
   stats := make(chan string)
   defer close(stats)
   go registerStats(stats)
+  defer logFile.Close()
 
   url.ConfigRepository(url.InitializeRepository())
 
@@ -133,5 +139,6 @@ func main() {
   http.HandleFunc("/home", Home)
   http.HandleFunc("/api/stats/", Stats)
 
+  logger("Server iniciado na porta: %d\n", port)
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }

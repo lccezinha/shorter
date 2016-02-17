@@ -3,12 +3,12 @@ package url
 import (
   "gopkg.in/redis.v3"
   "strconv"
-  "strings"
+  "encoding/json"
+  "fmt"
 )
 
 type redisRepository struct {
   client *redis.Client
-  urls map[string]*Url
 }
 
 func InitializeRedisRepository() *redisRepository {
@@ -18,29 +18,67 @@ func InitializeRedisRepository() *redisRepository {
     DB: 0,
   })
 
-  return &redisRepository{
-    client,
-    make(map[string]*Url),
-  }
+  return &redisRepository{client}
 }
 
 func (r *redisRepository) Persisted(id string) bool {
-  // key := strings.Join([]string{"urls", url.Id}, ":")
+  persisted := r.client.HExists("urls", id)
 
-  // r.client.HExists(key)
+  if persisted != nil {
+    return true
+  } else {
+    return false
+  }
 }
 
 func (r *redisRepository) FindById(id string) *Url {
+  // fmt.Println(id)
+  // var u Url
+  // data := r.client.HMGet("urls", id).Val()
+  // fmt.Println(data)
+
+  // if data != nil {
+  //   urlJSON, _ := []byte{string(data)}
+  //   err := json.Unmarshal(urlJSON, &u)
+
+  //   if err != nil {
+  //     return &u
+  //   }
+  // }
+
+  return &Url{Id: "123qw", UrlOriginal: "http://www.pudim.com.br"}
 }
 
 func (r *redisRepository) FindByUrl(url string) *Url {
+  // var u Url
+  // data := r.client.HMGet("urls", url).Val()
+
+  // if data != nil {
+  //   urlJSON, _ := []byte{string(data)}
+  //   err := json.Unmarshal(urlJSON, &u)
+
+  //   if err != nil {
+  //     return &u
+  //   }
+  // }
+
+  return &Url{Id: "123qw", UrlOriginal: "http://www.pudim.com.br"}
 }
 
 func (r *redisRepository) Save(url Url) error {
-  // key := strings.Join([]string{"urls", url.Id}, ":")
-  // r.client.HSet(key, url.UrlOriginal)
+  fmt.Println(url)
+  urlJSON, err := json.Marshal(url)
 
-  // return nil
+  fmt.Println(string(urlJSON))
+
+  if err != nil {
+    return err
+  }
+
+  r.client.HMSet("urls", url.Id, string(urlJSON))
+  r.client.HMSet("urls", url.UrlOriginal, string(urlJSON))
+
+  return nil
 }
 
 func (r *redisRepository) RegisterClick(id string) {

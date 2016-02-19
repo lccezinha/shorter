@@ -140,7 +140,7 @@ func main() {
   go registerStats(stats)
   defer logFile.Close()
 
-  url.ConfigRepository(url.InitializeRepository())
+  url.ConfigRepository(url.InitializeRedisRepository())
 
   http.HandleFunc("/api/shorter", Shorter)
   http.Handle("/r/", &Redirecter{stats})

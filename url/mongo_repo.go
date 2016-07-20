@@ -14,6 +14,10 @@ type mongoRepository struct {
 	session *mgo.Session
 }
 
+func (mr *mongoRepository) getCollection() *mgo.Collection {
+	return mr.session.DB(database).C(collection)
+}
+
 func InitializeMongoRepository() *mongoRepository {
 	session, err := mgo.Dial(urlConnection)
 
@@ -44,7 +48,7 @@ func (mr *mongoRepository) FindByUrl(url string) *Url {
 func (mr *mongoRepository) Save(url Url) error {
 	u := &Url{Id: url.Id, CreatedAt: time.Now(), UrlOriginal: url.UrlOriginal}
 
-	err := mr.session.DB(database).C(collection).Insert(u)
+	err := mr.getCollection().Insert(u)
 
 	if err != nil {
 		panic(err)

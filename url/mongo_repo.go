@@ -2,6 +2,7 @@ package url
 
 import (
 	"gopkg.in/mgo.v2"
+	"labix.org/v2/mgo/bson"
 	"time"
 )
 
@@ -31,17 +32,36 @@ func InitializeMongoRepository() *mongoRepository {
 }
 
 func (mr *mongoRepository) Persisted(id string) bool {
-	return false
-	// var u Url
+	url := &Url{}
 
-	// mr.connection.DB(database).C(collection)
+	if url = mr.FindById(id); url != nil {
+		return true
+	}
+
+	return false
 }
 
 func (mr *mongoRepository) FindById(id string) *Url {
+	url := Url{}
+
+	err := mr.getCollection().Find(bson.M{"id": id}).One(&url)
+
+	if err == nil {
+		return &url
+	}
+
 	return nil
 }
 
 func (mr *mongoRepository) FindByUrl(url string) *Url {
+	u := Url{}
+
+	err := mr.getCollection().Find(bson.M{"url_original": url}).One(&u)
+
+	if err == nil {
+		return &u
+	}
+
 	return nil
 }
 

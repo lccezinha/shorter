@@ -66,7 +66,7 @@ func (mr *mongoRepository) FindByUrl(url string) *Url {
 }
 
 func (mr *mongoRepository) Save(url Url) error {
-	u := &Url{Id: url.Id, CreatedAt: time.Now(), UrlOriginal: url.UrlOriginal}
+	u := &Url{Id: url.Id, CreatedAt: time.Now(), UrlOriginal: url.UrlOriginal, Clicks: 0}
 
 	err := mr.getCollection().Insert(u)
 
@@ -78,8 +78,19 @@ func (mr *mongoRepository) Save(url Url) error {
 }
 
 func (mr *mongoRepository) RegisterClick(id string) {
+	url := &Url{}
+
+	if url = mr.FindById(id); url != nil {
+		change := mgo.Change{
+			Update: bson.M{"$inc": bson.M{"clicks": 1}},
+		}
+
+		mr.getCollection().Find(bson.M{"id": id}).Apply(change, &url)
+	}
 }
 
-func (mr *mongoRepository) ShowClicks(id string) int {
-	return 1
+func (mr *mongoRepository) ShowStats(id string) *Url {
+	url := mr.FindById(id)
+
+	return url
 }

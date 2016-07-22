@@ -20,7 +20,7 @@ type Repository interface {
 	FindByUrl(url string) *Url
 	Save(url Url) error
 	RegisterClick(id string)
-	ShowClicks(id string) int
+	ShowStats(id string) *Url
 }
 
 type Url struct {
@@ -28,11 +28,11 @@ type Url struct {
 	Id          string        `bson:"id,omitempty" json:"id"`
 	CreatedAt   time.Time     `bson:"created_at" json:"created_at"`
 	UrlOriginal string        `bson:"url_original" json:"url_original"`
+	Clicks      int           `bson:"clicks" json:"clicks"`
 }
 
 type Stats struct {
-	Url    *Url `json:"url"`
-	Clicks int  `json:"clicks"`
+	Url *Url `json:"url"`
 }
 
 func ConfigRepository(r Repository) {
@@ -85,7 +85,11 @@ func FetchUrl(urlOriginal string) (u *Url, isNew bool, err error) {
 }
 
 func (u *Url) ShowStats() *Stats {
-	clicks := repository.ShowClicks(u.Id)
+	url := repository.FindById(u.Id)
 
-	return &Stats{u, clicks}
+	if url != nil {
+		return &Stats{url}
+	}
+
+	return nil
 }

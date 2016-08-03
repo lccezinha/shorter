@@ -1,0 +1,6 @@
+{
+  "host":"localhost",
+  "database":"shorter",
+  "collection":"urls",
+  "port":"27017"
+}

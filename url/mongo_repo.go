@@ -1,26 +1,41 @@
 package url
 
 import (
+	"encoding/json"
+	"fmt"
 	"gopkg.in/mgo.v2"
+	"io/ioutil"
 	"labix.org/v2/mgo/bson"
+	"log"
 	"time"
 )
 
-var urlConnection = "localhost:27017"
+var mongoConfig MongoConfig
 
-const database = "shorter"
-const collection = "urls"
+func init() {
+	file, err := ioutil.ReadFile("./mongo_config.json")
+
+	if err != nil {
+		fmt.Println(file)
+		log.Fatal(err)
+	}
+
+	fmt.Println(file)
+
+	mongoConfig = MongoConfig{}
+	json.Unmarshal(file, &mongoConfig)
+}
 
 type mongoRepository struct {
 	session *mgo.Session
 }
 
 func (mr *mongoRepository) getCollection() *mgo.Collection {
-	return mr.session.DB(database).C(collection)
+	return mr.session.DB(mongoConfig.Database).C(mongoConfig.Collection)
 }
 
 func InitializeMongoRepository() *mongoRepository {
-	session, err := mgo.Dial(urlConnection)
+	session, err := mgo.Dial(mongoConfig.UrlConnection)
 
 	if err != nil {
 		panic("Database connection Error!")
